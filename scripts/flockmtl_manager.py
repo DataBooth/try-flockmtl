@@ -14,10 +14,11 @@ class FlockMTLConfig:
 
 
 class FlockMTLManager:
-    def __init__(self, db_path, config: FlockMTLConfig):
+    def __init__(self, db_path, config: FlockMTLConfig, sql_log_path="flockmtl.sql"):
         self.db_path = db_path
         self.config = config
         self.con = duckdb.connect(self.db_path)
+        self.sql_log_path = sql_log_path
         self._install_and_load_flockmtl()
 
     def _install_and_load_flockmtl(self):
@@ -26,6 +27,9 @@ class FlockMTLManager:
 
     def execute_sql(self, sql, *args, **kwargs):
         logger.info(f"Executing SQL: {sql.strip()}")
+        # Append to SQL log file
+        with open(self.sql_log_path, "a") as f:
+            f.write(sql.strip() + "\n\n")
         return self.con.execute(sql, *args, **kwargs)
 
     def check_ollama_available(self, timeout=3):
