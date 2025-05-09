@@ -1,0 +1,14 @@
+[ollama]
+api_url = "http://127.0.0.1:11434"
+
+[[models]]
+name = "mixtral_local"
+ollama_name = "mixtral:latest"
+context_window = 128000
+max_output_tokens = 2048
+
+[[models]]
+name = "llama2_local"
+ollama_name = "llama2:latest"
+context_window = 4096
+max_output_tokens = 1024
