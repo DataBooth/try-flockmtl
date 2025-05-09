@@ -102,7 +102,10 @@ if __name__ == "__main__":
     if manager.check_ollama_available():
         manager.create_secret()
         manager.create_models()
-        manager.test_completion("Summarise the difference between DuckDB and SQLite.")
+        manager.test_completion(
+            "Summarise the difference between DuckDB and SQLite.",
+            model_name="mixtral_local",
+        )
     else:
         logger.error(
             "Ollama endpoint is not available. Please start Ollama and try again."
