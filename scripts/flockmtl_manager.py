@@ -1,8 +1,8 @@
-import json
-import tomllib
-
 import duckdb
+import tomllib
 import httpx
+from loguru import logger
+import json
 
 
 class FlockMTLConfig:
@@ -20,35 +20,41 @@ class FlockMTLManager:
         self.con = duckdb.connect(self.db_path)
         self._install_and_load_flockmtl()
 
+    def _install_and_load_flockmtl(self):
+        self.execute_sql("INSTALL flockmtl;")
+        self.execute_sql("LOAD flockmtl;")
+
+    def execute_sql(self, sql, *args, **kwargs):
+        logger.info(f"Executing SQL: {sql.strip()}")
+        return self.con.execute(sql, *args, **kwargs)
+
     def check_ollama_available(self, timeout=3):
         """Check if the Ollama endpoint is available using httpx."""
         try:
             response = httpx.get(self.config.api_url, timeout=timeout)
             if 200 <= response.status_code < 300:
-                print(f"Ollama endpoint {self.config.api_url} is available.")
+                logger.info(f"Ollama endpoint {self.config.api_url} is available.")
                 return True
             else:
-                print(f"Ollama endpoint returned status {response.status_code}.")
+                logger.error(f"Ollama endpoint returned status {response.status_code}.")
                 return False
         except httpx.RequestError as e:
-            print(f"Could not reach Ollama endpoint at {self.config.api_url}: {e}")
+            logger.error(
+                f"Could not reach Ollama endpoint at {self.config.api_url}: {e}"
+            )
             return False
-
-    def _install_and_load_flockmtl(self):
-        self.con.execute("INSTALL flockmtl;")
-        self.con.execute("LOAD flockmtl;")
 
     def create_secret(self):
         try:
-            self.con.execute(f"""
+            self.execute_sql(f"""
                 CREATE SECRET (
                     TYPE OLLAMA,
                     API_URL '{self.config.api_url}'
                 );
             """)
-            print("Secret created.")
+            logger.info("Secret created.")
         except Exception as e:
-            print("Secret may already exist or another error occurred:", e)
+            logger.warning(f"Secret may already exist or another error occurred: {e}")
 
     def create_models(self):
         for model in self.config.models:
@@ -57,10 +63,8 @@ class FlockMTLManager:
                     "context_window": model["context_window"],
                     "max_output_tokens": model["max_output_tokens"],
                 }
-                # Convert model_args to JSON string with double quotes
-
                 model_args_json = json.dumps(model_args)
-                self.con.execute(f"""
+                self.execute_sql(f"""
                     CREATE MODEL(
                         '{model["name"]}',
                         '{model["ollama_name"]}',
@@ -68,35 +72,39 @@ class FlockMTLManager:
                         {model_args_json}
                     );
                 """)
-                print(f"Model '{model['name']}' registered.")
+                logger.info(f"Model '{model['name']}' registered.")
             except Exception as e:
-                print(f"Error registering model '{model['name']}':", e)
+                logger.warning(f"Error registering model '{model['name']}': {e}")
 
     def test_completion(self, prompt, model_name=None):
         if not model_name:
             model_name = self.config.models[0]["name"]
         try:
-            result = self.con.execute(f"""
+            sql = f"""
                 SELECT llm_complete(
                     {{'model_name': '{model_name}'}},
                     {{'prompt': '{prompt}'}}
                 );
-            """).fetchall()
-            print(f"Response from '{model_name}':", result)
+            """
+            result = self.execute_sql(sql).fetchall()
+            logger.info(f"Response from '{model_name}': {result}")
         except Exception as e:
-            print(f"Error running test completion with '{model_name}':", e)
+            logger.error(f"Error running test completion with '{model_name}': {e}")
 
     def close(self):
         self.con.close()
 
 
 if __name__ == "__main__":
+    logger.add("flockmtl.log", rotation="1 MB", retention="10 days")
     config = FlockMTLConfig("flockmtl.toml")
-    manager = FlockMTLManager("data/flockmtl_demo.duckdb", config)
+    manager = FlockMTLManager("flockmtl_demo.duckdb", config)
     if manager.check_ollama_available():
         manager.create_secret()
         manager.create_models()
         manager.test_completion("Summarise the difference between DuckDB and SQLite.")
     else:
-        print("Ollama endpoint is not available. Please start Ollama and try again.")
+        logger.error(
+            "Ollama endpoint is not available. Please start Ollama and try again."
+        )
     manager.close()
