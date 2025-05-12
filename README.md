@@ -4,6 +4,13 @@
 
 Experiments with the FlockMTL DuckDB extension.
 
+
+## Status
+
+![Status: Experimental](https://img.shields.io/badge/status-experimental-orange.svg)
+
+*There appears to be some issue with the FlockMTL extension and DuckDB 1.2.2, which is causing the `GetAlterInfo not implemented for this type` error. This might be due to a mismatch between the extension and the DuckDB version, however the documenation suggests that the extension is compatible with DuckDB 1.2.2.*
+
 ## Why?
 
 Modern data workflows increasingly require local, private, and flexible access to large language models (LLMs) for analytics, summarisation, and automation. This project enables you to:
