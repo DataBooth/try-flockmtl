@@ -1,9 +1,27 @@
 **`try-flockmtl`**
 
+- [FlockMTL/Ollama DuckDB Integration](#flockmtlollama-duckdb-integration)
+  - [Status](#status)
+  - [Why?](#why)
+  - [What?](#what)
+  - [How?](#how)
+    - [1. Prerequisites](#1-prerequisites)
+    - [2. Setup](#2-setup)
+      - [a. Configure Models and Endpoint](#a-configure-models-and-endpoint)
+      - [b. Start Ollama](#b-start-ollama)
+      - [c. Register Models & Test](#c-register-models--test)
+      - [d. Manage with Justfile](#d-manage-with-justfile)
+    - [3. Troubleshooting](#3-troubleshooting)
+    - [4. Project Structure](#4-project-structure)
+    - [5. Extending](#5-extending)
+  - [Example Usage](#example-usage)
+  - [Compatibility Notes](#compatibility-notes)
+  - [License](#license)
+  - [Credits](#credits)
+
 # FlockMTL/Ollama DuckDB Integration
 
 Experiments with the FlockMTL DuckDB extension.
-
 
 ## Status
 
